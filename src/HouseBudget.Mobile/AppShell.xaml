@@ -22,6 +22,9 @@
         <Tab Title="Goals" Icon="goals.png">
             <ShellContent Route="goals" ContentTemplate="{DataTemplate views:GoalsPage}" />
         </Tab>
+        <Tab Title="Premium" Icon="subscription.png">
+            <ShellContent Route="subscription" ContentTemplate="{DataTemplate views:SubscriptionPage}" />
+        </Tab>
     </TabBar>
 
 </Shell>

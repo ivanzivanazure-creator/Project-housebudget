@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Application x:Class="HouseBudget.Mobile.App"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:HouseBudget.Mobile.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Value Converters (globally available to all pages) -->
+            <conv:BoolToColorConverter x:Key="BoolToColorConverter" />
+            <conv:InverseBoolConverter x:Key="InverseBoolConverter" />
+            <conv:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <conv:IntToBoolConverter x:Key="IntToBoolConverter" />
+            <conv:PercentToProgressConverter x:Key="PercentToProgressConverter" />
+            <conv:TypeToColorConverter x:Key="TypeToColorConverter" />
+            <conv:TypeToSignConverter x:Key="TypeToSignConverter" />
+            <conv:CategoryToEmojiConverter x:Key="CategoryToEmojiConverter" />
+            <conv:BoolToStringConverter x:Key="BoolToStringConverter" />
+            <conv:StringToBoolConverter x:Key="StringToBoolConverter" />
+            <conv:PriceToActionConverter x:Key="PriceToActionConverter" />
+            <conv:TierToColorConverter x:Key="TierToColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

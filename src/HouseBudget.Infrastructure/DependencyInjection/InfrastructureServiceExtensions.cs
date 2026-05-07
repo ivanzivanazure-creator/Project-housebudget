@@ -33,9 +33,13 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IGoalRepository, GoalRepository>();
         services.AddScoped<IBillRepository, BillRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPaymentGatewayService, StripePaymentService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
         return services;
