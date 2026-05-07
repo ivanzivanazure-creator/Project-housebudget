@@ -54,4 +54,12 @@ public sealed class TransactionsController : BaseApiController
         await _transactionRepository.DeleteAsync(t, ct);
         return Success<object?>(null, "Transaction deleted.");
     }
+
+    /// <summary>Export transactions to CSV</summary>
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken ct)
+    {
+        var result = await Mediator.Send(new ExportTransactionsCommand(from, to), ct);
+        return File(result.Data, result.ContentType, result.FileName);
+    }
 }

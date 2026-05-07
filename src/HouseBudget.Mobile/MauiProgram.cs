@@ -32,6 +32,10 @@ public static class MauiProgram
         builder.Services.AddTransient<BudgetsViewModel>();
         builder.Services.AddTransient<GoalsViewModel>();
         builder.Services.AddTransient<SubscriptionViewModel>();
+        builder.Services.AddTransient<BillsViewModel>();
+        builder.Services.AddTransient<ReportsViewModel>();
+        builder.Services.AddTransient<ProfileViewModel>();
+        builder.Services.AddTransient<CategoriesViewModel>();
 
         // Pages
         builder.Services.AddTransient<LoginPage>();
@@ -40,6 +44,10 @@ public static class MauiProgram
         builder.Services.AddTransient<BudgetsPage>();
         builder.Services.AddTransient<GoalsPage>();
         builder.Services.AddTransient<SubscriptionPage>();
+        builder.Services.AddTransient<BillsPage>();
+        builder.Services.AddTransient<ReportsPage>();
+        builder.Services.AddTransient<ProfilePage>();
+        builder.Services.AddTransient<CategoriesPage>();
         builder.Services.AddSingleton<AppShell>();
 
 #if DEBUG

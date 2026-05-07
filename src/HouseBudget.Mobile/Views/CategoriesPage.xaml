@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.CategoriesPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             xmlns:models="clr-namespace:HouseBudget.Mobile.Models"
+             x:DataType="vm:CategoriesViewModel"
+             Title="Categories"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Header -->
+        <Frame Grid.Row="0" BackgroundColor="#1A1A2E" CornerRadius="0" Padding="16,18" HasShadow="False">
+            <Label Text="Manage Categories" FontSize="20" FontAttributes="Bold" TextColor="White" />
+        </Frame>
+
+        <!-- System / Custom Tab Toggle -->
+        <Frame Grid.Row="1" Margin="16,16,16,0" Padding="4" CornerRadius="12"
+               BackgroundColor="White" HasShadow="False" BorderColor="#E0E0E0">
+            <Grid ColumnDefinitions="*,*">
+                <Button Grid.Column="0" Text="System"
+                        Command="{Binding SwitchTabCommand}"
+                        CommandParameter="System"
+                        BackgroundColor="{Binding ShowSystem, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1A1A2E|Transparent'}"
+                        TextColor="{Binding ShowSystem, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1A1A2E'}"
+                        CornerRadius="10" HeightRequest="40" FontAttributes="Bold" />
+                <Button Grid.Column="1" Text="Custom"
+                        Command="{Binding SwitchTabCommand}"
+                        CommandParameter="Custom"
+                        BackgroundColor="{Binding ShowSystem, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Transparent|#1A1A2E'}"
+                        TextColor="{Binding ShowSystem, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#1A1A2E|White'}"
+                        CornerRadius="10" HeightRequest="40" FontAttributes="Bold" />
+            </Grid>
+        </Frame>
+
+        <!-- Lists Container -->
+        <RefreshView Grid.Row="2" Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <Grid>
+
+                <!-- System Categories List -->
+                <CollectionView ItemsSource="{Binding SystemCategories}"
+                                IsVisible="{Binding ShowSystem}"
+                                Margin="16,12,16,0"
+                                SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Margin="0,40">
+                            <Label Text="🏷️" FontSize="48" HorizontalOptions="Center" />
+                            <Label Text="No system categories" FontSize="16" TextColor="#90A4AE" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:CategoryModel">
+                            <Frame BackgroundColor="White" CornerRadius="14" Padding="14,12"
+                                   Margin="0,0,0,8" HasShadow="True">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Frame Grid.Column="0" WidthRequest="40" HeightRequest="40" CornerRadius="20"
+                                           BackgroundColor="{Binding Color}" Padding="0" HasShadow="False"
+                                           VerticalOptions="Center" Margin="0,0,12,0" />
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                        <Frame Padding="6,2" CornerRadius="6" HasShadow="False"
+                                               BackgroundColor="#F5F7FA" HorizontalOptions="Start">
+                                            <Label Text="{Binding TypeName}" FontSize="11" TextColor="#607D8B" />
+                                        </Frame>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="🔒" FontSize="18" VerticalOptions="Center" TextColor="#B0BEC5" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Custom Categories List -->
+                <CollectionView ItemsSource="{Binding CustomCategories}"
+                                IsVisible="{Binding IsCustomTab}"
+                                Margin="16,12,16,0"
+                                SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Margin="0,40">
+                            <Label Text="✏️" FontSize="48" HorizontalOptions="Center" />
+                            <Label Text="No custom categories yet" FontSize="16" TextColor="#90A4AE" HorizontalOptions="Center" />
+                            <Label Text="Add one below to get started" FontSize="13" TextColor="#B0BEC5" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:CategoryModel">
+                            <Frame BackgroundColor="White" CornerRadius="14" Padding="14,12"
+                                   Margin="0,0,0,8" HasShadow="True">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Frame Grid.Column="0" WidthRequest="40" HeightRequest="40" CornerRadius="20"
+                                           BackgroundColor="{Binding Color}" Padding="0" HasShadow="False"
+                                           VerticalOptions="Center" Margin="0,0,12,0" />
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                        <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                        <Frame Padding="6,2" CornerRadius="6" HasShadow="False"
+                                               BackgroundColor="#F5F7FA" HorizontalOptions="Start">
+                                            <Label Text="{Binding TypeName}" FontSize="11" TextColor="#607D8B" />
+                                        </Frame>
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="2"
+                                            Text="✕"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=DeleteCategoryCommand}"
+                                            CommandParameter="{Binding Id}"
+                                            BackgroundColor="#FFEBEE" TextColor="#C62828"
+                                            CornerRadius="8" WidthRequest="36" HeightRequest="36"
+                                            Padding="0" FontSize="14" FontAttributes="Bold" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </Grid>
+        </RefreshView>
+
+        <!-- Add Category Panel (Custom tab only) -->
+        <Frame Grid.Row="3"
+               IsVisible="{Binding IsCustomTab}"
+               BackgroundColor="White" CornerRadius="0" Padding="16,14" HasShadow="False"
+               BorderColor="#E0E0E0">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Add Custom Category" FontSize="15" FontAttributes="Bold" TextColor="#1A1A2E" />
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry Grid.Column="0"
+                           Text="{Binding NewCategoryName}" Placeholder="Category name"
+                           BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding CategoryTypes}"
+                            SelectedItem="{Binding NewCategoryType}"
+                            TextColor="#1A1A2E" BackgroundColor="#F5F7FA"
+                            WidthRequest="110" />
+                </Grid>
+
+                <!-- Color Picker Row -->
+                <VerticalStackLayout Spacing="6">
+                    <HorizontalStackLayout Spacing="6">
+                        <Label Text="Color:" FontSize="12" TextColor="#607D8B" VerticalOptions="Center" />
+                        <Frame WidthRequest="26" HeightRequest="26" CornerRadius="13" Padding="0"
+                               BackgroundColor="{Binding NewCategoryColor}" HasShadow="False" BorderColor="#1A1A2E">
+                            <Label Text="✓" FontSize="12" FontAttributes="Bold" TextColor="White"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Frame>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="8">
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#E94560" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#E94560" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#4CAF50" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#4CAF50" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#2196F3" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#2196F3" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#FF9800" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#FF9800" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#9C27B0" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#9C27B0" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#00BCD4" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#00BCD4" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#F44336" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#F44336" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                        <Frame WidthRequest="32" HeightRequest="32" CornerRadius="16" Padding="0"
+                               BackgroundColor="#607D8B" HasShadow="False">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoriesViewModel}}, Path=SelectColorCommand}"
+                                                      CommandParameter="#607D8B" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <Button Text="+ Add Category" Command="{Binding AddCategoryCommand}"
+                        BackgroundColor="#E94560" TextColor="White" CornerRadius="10"
+                        HeightRequest="44" FontAttributes="Bold" />
+            </VerticalStackLayout>
+        </Frame>
+
+    </Grid>
+</ContentPage>

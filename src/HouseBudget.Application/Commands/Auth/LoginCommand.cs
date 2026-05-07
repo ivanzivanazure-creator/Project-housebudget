@@ -11,12 +11,14 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
 {
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly IPasswordHasher _hasher;
     private readonly IUnitOfWork _unitOfWork;
 
-    public LoginCommandHandler(IUserRepository userRepository, ITokenService tokenService, IUnitOfWork unitOfWork)
+    public LoginCommandHandler(IUserRepository userRepository, ITokenService tokenService, IPasswordHasher hasher, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+        _hasher = hasher;
         _unitOfWork = unitOfWork;
     }
 
@@ -26,8 +28,16 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResp
             ?? throw new UnauthorizedDomainException("Invalid email or password.");
 
         if (!user.IsActive) throw new UnauthorizedDomainException("Account is deactivated.");
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+
+        if (user.IsLockedOut)
+            throw new UnauthorizedDomainException("Account is temporarily locked. Please try again later.");
+
+        if (!_hasher.Verify(request.Password, user.PasswordHash))
+        {
+            user.RecordFailedLogin();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             throw new UnauthorizedDomainException("Invalid email or password.");
+        }
 
         var refreshToken = _tokenService.GenerateRefreshToken();
         user.SetRefreshToken(refreshToken, DateTime.UtcNow.AddDays(30));

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.ReportsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             xmlns:models="clr-namespace:HouseBudget.Mobile.Models"
+             x:DataType="vm:ReportsViewModel"
+             Title="Reports"
+             BackgroundColor="#F5F7FA">
+
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Dark Header -->
+                <Frame BackgroundColor="#1A1A2E" CornerRadius="0" Padding="16,20" HasShadow="False">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Financial Reports" FontSize="20" FontAttributes="Bold" TextColor="White" />
+                        <Label Text="{Binding SelectedPeriod}" FontSize="13" TextColor="#90A4AE" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Period Selector -->
+                <Frame Margin="16,16,16,0" Padding="4" CornerRadius="12"
+                       BackgroundColor="White" HasShadow="False" BorderColor="#E0E0E0">
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Button Grid.Column="0" Text="This Month"
+                                Command="{Binding SelectPeriodCommand}"
+                                CommandParameter="This Month"
+                                BackgroundColor="{Binding ShowThisMonth, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#E94560|Transparent'}"
+                                TextColor="{Binding ShowThisMonth, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1A1A2E'}"
+                                CornerRadius="10" HeightRequest="38" FontSize="12" FontAttributes="Bold" />
+                        <Button Grid.Column="1" Text="Last Month"
+                                Command="{Binding SelectPeriodCommand}"
+                                CommandParameter="Last Month"
+                                BackgroundColor="{Binding ShowLastMonth, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#E94560|Transparent'}"
+                                TextColor="{Binding ShowLastMonth, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1A1A2E'}"
+                                CornerRadius="10" HeightRequest="38" FontSize="12" FontAttributes="Bold" />
+                        <Button Grid.Column="2" Text="This Year"
+                                Command="{Binding SelectPeriodCommand}"
+                                CommandParameter="This Year"
+                                BackgroundColor="{Binding ShowThisYear, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#E94560|Transparent'}"
+                                TextColor="{Binding ShowThisYear, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White|#1A1A2E'}"
+                                CornerRadius="10" HeightRequest="38" FontSize="12" FontAttributes="Bold" />
+                    </Grid>
+                </Frame>
+
+                <!-- Summary Cards -->
+                <Grid Margin="16,16,16,0" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="12" ColumnSpacing="12">
+
+                    <Frame Grid.Column="0" Grid.Row="0" BackgroundColor="#E8F5E9" CornerRadius="14" Padding="14" HasShadow="False">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Income" FontSize="12" TextColor="#388E3C" />
+                            <Label Text="{Binding TotalIncome, StringFormat='+{0:N2}'}"
+                                   FontSize="18" FontAttributes="Bold" TextColor="#2E7D32" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="1" Grid.Row="0" BackgroundColor="#FFEBEE" CornerRadius="14" Padding="14" HasShadow="False">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Expenses" FontSize="12" TextColor="#C62828" />
+                            <Label Text="{Binding TotalExpenses, StringFormat='-{0:N2}'}"
+                                   FontSize="18" FontAttributes="Bold" TextColor="#B71C1C" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="0" Grid.Row="1" BackgroundColor="#E3F2FD" CornerRadius="14" Padding="14" HasShadow="False">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Net Savings" FontSize="12" TextColor="#1565C0" />
+                            <Label Text="{Binding NetSavings, StringFormat='{0:N2}'}"
+                                   FontSize="18" FontAttributes="Bold" TextColor="#0D47A1" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <Frame Grid.Column="1" Grid.Row="1" BackgroundColor="#F3E5F5" CornerRadius="14" Padding="14" HasShadow="False">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Savings Rate" FontSize="12" TextColor="#7B1FA2" />
+                            <Label Text="{Binding SavingsRate, StringFormat='{0:F1}%'}"
+                                   FontSize="18" FontAttributes="Bold" TextColor="#6A1B9A" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                </Grid>
+
+                <!-- Income vs Expenses Comparison -->
+                <Frame BackgroundColor="White" CornerRadius="16" Margin="16,16,16,0" Padding="16" HasShadow="True">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Income vs Expenses" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+
+                        <VerticalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="8">
+                                <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
+                                         BackgroundColor="#4CAF50" VerticalOptions="Center" />
+                                <Label Text="Income" FontSize="13" TextColor="#607D8B" HorizontalOptions="StartAndExpand" VerticalOptions="Center" />
+                                <Label Text="{Binding TotalIncome, StringFormat='{0:N2}'}"
+                                       FontSize="13" FontAttributes="Bold" TextColor="#2E7D32" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <ProgressBar Progress="{Binding TotalIncome, Converter={StaticResource PercentToProgressConverter}}"
+                                         ProgressColor="#4CAF50" HeightRequest="8" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <HorizontalStackLayout Spacing="8">
+                                <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
+                                         BackgroundColor="#F44336" VerticalOptions="Center" />
+                                <Label Text="Expenses" FontSize="13" TextColor="#607D8B" HorizontalOptions="StartAndExpand" VerticalOptions="Center" />
+                                <Label Text="{Binding TotalExpenses, StringFormat='{0:N2}'}"
+                                       FontSize="13" FontAttributes="Bold" TextColor="#C62828" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <ProgressBar Progress="{Binding TotalExpenses, Converter={StaticResource PercentToProgressConverter}}"
+                                         ProgressColor="#F44336" HeightRequest="8" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Top Expense Categories -->
+                <VerticalStackLayout IsVisible="{Binding CategoryBreakdown.Count, Converter={StaticResource IntToBoolConverter}}"
+                                     Margin="16,16,16,0" Spacing="8">
+                    <Label Text="Top Expense Categories" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+                    <CollectionView ItemsSource="{Binding CategoryBreakdown}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CategoryBreakdownItem">
+                                <Frame BackgroundColor="White" CornerRadius="12" Padding="14,12"
+                                       Margin="0,0,0,8" HasShadow="True">
+                                    <VerticalStackLayout Spacing="8">
+                                        <HorizontalStackLayout>
+                                            <BoxView WidthRequest="12" HeightRequest="12" CornerRadius="6"
+                                                     BackgroundColor="{Binding Color}" VerticalOptions="Center" Margin="0,0,8,0" />
+                                            <Label Text="{Binding CategoryName}" FontSize="14" FontAttributes="Bold"
+                                                   TextColor="#1A1A2E" HorizontalOptions="StartAndExpand" VerticalOptions="Center" />
+                                            <Label Text="{Binding Percentage, StringFormat='{0:F1}%'}"
+                                                   FontSize="12" TextColor="#90A4AE" VerticalOptions="Center" Margin="0,0,8,0" />
+                                            <Label Text="{Binding Amount, StringFormat='{0:N2}'}"
+                                                   FontSize="14" FontAttributes="Bold" TextColor="#1A1A2E" VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                        <ProgressBar Progress="{Binding Percentage, Converter={StaticResource PercentToProgressConverter}}"
+                                                     ProgressColor="{Binding Color}" HeightRequest="6" />
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+
+                <!-- Monthly Trend -->
+                <VerticalStackLayout IsVisible="{Binding MonthlyTrend.Count, Converter={StaticResource IntToBoolConverter}}"
+                                     Margin="16,16,16,32" Spacing="8">
+                    <Label Text="Monthly Trend" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+                    <Frame BackgroundColor="White" CornerRadius="16" Padding="16" HasShadow="True">
+                        <VerticalStackLayout Spacing="14">
+                            <CollectionView ItemsSource="{Binding MonthlyTrend}" SelectionMode="None">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:MonthlyTrendItem">
+                                        <VerticalStackLayout Spacing="6" Margin="0,0,0,10">
+                                            <HorizontalStackLayout>
+                                                <Label Text="{Binding Month}" FontSize="13" FontAttributes="Bold"
+                                                       TextColor="#1A1A2E" HorizontalOptions="StartAndExpand" />
+                                                <Label FontSize="12" TextColor="#607D8B">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="+" TextColor="#4CAF50" />
+                                                            <Span Text="{Binding Income, StringFormat='{0:N0}'}" TextColor="#4CAF50" FontAttributes="Bold" />
+                                                            <Span Text="  -" TextColor="#F44336" />
+                                                            <Span Text="{Binding Expenses, StringFormat='{0:N0}'}" TextColor="#F44336" FontAttributes="Bold" />
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
+                                            </HorizontalStackLayout>
+
+                                            <!-- Income bar -->
+                                            <Grid ColumnDefinitions="60,*" ColumnSpacing="8">
+                                                <Label Grid.Column="0" Text="Income" FontSize="11" TextColor="#388E3C" VerticalOptions="Center" />
+                                                <BoxView Grid.Column="1" HeightRequest="8" CornerRadius="4"
+                                                         BackgroundColor="#4CAF50" VerticalOptions="Center"
+                                                         WidthRequest="{Binding IncomeBarWidth}" HorizontalOptions="Start" />
+                                            </Grid>
+
+                                            <!-- Expenses bar -->
+                                            <Grid ColumnDefinitions="60,*" ColumnSpacing="8">
+                                                <Label Grid.Column="0" Text="Expenses" FontSize="11" TextColor="#C62828" VerticalOptions="Center" />
+                                                <BoxView Grid.Column="1" HeightRequest="8" CornerRadius="4"
+                                                         BackgroundColor="#F44336" VerticalOptions="Center"
+                                                         WidthRequest="{Binding ExpensesBarWidth}" HorizontalOptions="Start" />
+                                            </Grid>
+
+                                            <BoxView HeightRequest="1" BackgroundColor="#F0F0F0" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

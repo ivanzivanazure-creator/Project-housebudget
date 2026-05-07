@@ -22,8 +22,17 @@
         <Tab Title="Goals" Icon="goals.png">
             <ShellContent Route="goals" ContentTemplate="{DataTemplate views:GoalsPage}" />
         </Tab>
+        <Tab Title="Bills" Icon="bills.png">
+            <ShellContent Route="bills" ContentTemplate="{DataTemplate views:BillsPage}" />
+        </Tab>
+        <Tab Title="Reports" Icon="reports.png">
+            <ShellContent Route="reports" ContentTemplate="{DataTemplate views:ReportsPage}" />
+        </Tab>
         <Tab Title="Premium" Icon="subscription.png">
             <ShellContent Route="subscription" ContentTemplate="{DataTemplate views:SubscriptionPage}" />
+        </Tab>
+        <Tab Title="Profile" Icon="profile.png">
+            <ShellContent Route="profile" ContentTemplate="{DataTemplate views:ProfilePage}" />
         </Tab>
     </TabBar>
 

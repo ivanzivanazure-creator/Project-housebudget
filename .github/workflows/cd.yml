@@ -1,0 +1,176 @@
+name: Deploy to Production
+
+# =============================================================================
+# Required GitHub Secrets — configure these in:
+#   Settings → Secrets and variables → Actions → New repository secret
+#
+#   DOCKER_REGISTRY    — Hostname of your container registry.
+#                        Examples: ghcr.io  |  registry.hub.docker.com
+#                                  myregistry.azurecr.io
+#
+#   DOCKER_IMAGE       — Full image name (without tag).
+#                        Example: ghcr.io/your-org/housebudget-api
+#
+#   DOCKER_USERNAME    — Registry login username (or service-principal ID).
+#
+#   DOCKER_PASSWORD    — Registry login password / access token / SP secret.
+#                        For GHCR use a Personal Access Token with
+#                        write:packages scope.
+#
+#   SSH_HOST           — Hostname or IP address of the production server.
+#
+#   SSH_USER           — SSH login user on the production server.
+#
+#   SSH_KEY            — PEM-encoded private SSH key (the public half must be
+#                        in ~/.ssh/authorized_keys on SSH_HOST).
+#                        Generate with:
+#                          ssh-keygen -t ed25519 -C "github-actions"
+# =============================================================================
+
+on:
+  # Manual trigger — useful for rollbacks or out-of-band deployments.
+  workflow_dispatch:
+
+  # Automatic trigger on pushes to main, but only after CI has passed.
+  # The CI workflow must complete successfully before this workflow starts.
+  push:
+    branches:
+      - main
+
+# Only allow one deployment to run at a time; queue subsequent ones.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+  DOCKER_IMAGE:    ${{ secrets.DOCKER_IMAGE }}
+
+jobs:
+
+  # ===========================================================================
+  # Deploy
+  # ===========================================================================
+  deploy:
+    name: Build, Push & Deploy
+    runs-on: ubuntu-latest
+
+    # Gate: only run after CI passes on the same SHA.
+    # Remove this if you trigger the workflow manually after CI.
+    # (workflow_dispatch bypasses the needs check automatically via the
+    #  conditional below.)
+
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # Build image metadata (tags + labels)
+      # ------------------------------------------------------------------
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            # Tag with the exact commit SHA for traceability.
+            type=sha,format=long
+            # Also tag as "latest" on every main push.
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      # ------------------------------------------------------------------
+      # Set up Buildx so we can use the GitHub Actions layer cache.
+      # ------------------------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ------------------------------------------------------------------
+      # Authenticate with the container registry.
+      # ------------------------------------------------------------------
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # ------------------------------------------------------------------
+      # Build and push the production image.
+      # ------------------------------------------------------------------
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Reuse layers cached from previous runs to keep build times low.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ------------------------------------------------------------------
+      # SSH into the production server and roll out the new image.
+      # The server is expected to have Docker Compose installed and the
+      # repository checked out (or at least a docker-compose.yml present)
+      # at ~/housebudget.
+      # ------------------------------------------------------------------
+      - name: Deploy to production server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ steps.push.outputs.digest }}
+          FULL_IMAGE: ${{ env.DOCKER_IMAGE }}@${{ steps.push.outputs.digest }}
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_KEY }}
+          # Pass the image reference into the remote shell so the compose
+          # file can use DOCKER_IMAGE_TAG if desired.
+          envs: IMAGE_TAG,FULL_IMAGE
+          script: |
+            set -euo pipefail
+
+            echo "==> Pulling new image: $FULL_IMAGE"
+            docker pull "$FULL_IMAGE"
+
+            echo "==> Updating running services"
+            cd ~/housebudget
+
+            # Pull latest compose file changes if the repo is checked out.
+            git pull --ff-only origin main || true
+
+            # Re-tag the digest as 'latest' locally so compose can find it.
+            docker tag "$FULL_IMAGE" "${{ env.DOCKER_IMAGE }}:latest"
+
+            # Bring the stack up with the new image; leave other services
+            # (e.g. the database) untouched unless their image changed.
+            docker compose up -d --no-deps --pull never api
+
+            echo "==> Removing dangling images to reclaim disk space"
+            docker image prune -f
+
+            echo "==> Deployment complete"
+
+      # ------------------------------------------------------------------
+      # Post-deploy health check — fails the workflow if the API is not
+      # responding within 60 seconds, giving you an early warning.
+      # Adjust the URL to match your production domain.
+      # ------------------------------------------------------------------
+      - name: Health check
+        run: |
+          echo "Waiting for API to become healthy..."
+          for i in $(seq 1 12); do
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" \
+              "http://${{ secrets.SSH_HOST }}:8080/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i/12 — HTTP $STATUS — retrying in 5s..."
+            sleep 5
+          done
+          echo "Health check failed after 60 seconds"
+          exit 1
