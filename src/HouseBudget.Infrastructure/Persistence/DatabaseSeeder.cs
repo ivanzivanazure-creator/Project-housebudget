@@ -41,5 +41,52 @@ public static class DatabaseSeeder
 
         await context.Categories.AddRangeAsync(categories);
         await context.SaveChangesAsync();
+
+        await SeedSubscriptionPlansAsync(context);
+    }
+
+    private static async Task SeedSubscriptionPlansAsync(AppDbContext context)
+    {
+        if (await context.SubscriptionPlans.AnyAsync()) return;
+
+        var plans = new[]
+        {
+            // Free – Monthly
+            SubscriptionPlan.Create(
+                "Free", SubscriptionTier.Free, BillingPeriod.Monthly,
+                0, "USD", FeatureLimits.Free,
+                "Get started with basic budgeting", trialDays: 0),
+
+            // Premium – Monthly
+            SubscriptionPlan.Create(
+                "Premium Monthly", SubscriptionTier.Premium, BillingPeriod.Monthly,
+                9.99m, "USD", FeatureLimits.Premium,
+                "Full-featured personal finance management", trialDays: 14,
+                stripePriceId: "price_premium_monthly"),
+
+            // Premium – Annual (2 months free)
+            SubscriptionPlan.Create(
+                "Premium Annual", SubscriptionTier.Premium, BillingPeriod.Annual,
+                99.99m, "USD", FeatureLimits.Premium,
+                "Full-featured personal finance – save 16% with annual billing", trialDays: 14,
+                stripePriceId: "price_premium_annual"),
+
+            // Business – Monthly
+            SubscriptionPlan.Create(
+                "Business Monthly", SubscriptionTier.Business, BillingPeriod.Monthly,
+                19.99m, "USD", FeatureLimits.Business,
+                "Advanced features + API access for power users", trialDays: 14,
+                stripePriceId: "price_business_monthly"),
+
+            // Business – Annual
+            SubscriptionPlan.Create(
+                "Business Annual", SubscriptionTier.Business, BillingPeriod.Annual,
+                199.99m, "USD", FeatureLimits.Business,
+                "Advanced features + API access – save 16% with annual billing", trialDays: 14,
+                stripePriceId: "price_business_annual"),
+        };
+
+        await context.SubscriptionPlans.AddRangeAsync(plans);
+        await context.SaveChangesAsync();
     }
 }
