@@ -39,6 +39,7 @@ public static class InfrastructureServiceExtensions
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IPaymentGatewayService, StripePaymentService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 

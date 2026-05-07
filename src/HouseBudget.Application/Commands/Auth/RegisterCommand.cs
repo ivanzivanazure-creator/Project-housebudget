@@ -13,13 +13,15 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly IEmailService _emailService;
+    private readonly IPasswordHasher _hasher;
     private readonly IUnitOfWork _unitOfWork;
 
-    public RegisterCommandHandler(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, IUnitOfWork unitOfWork)
+    public RegisterCommandHandler(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, IPasswordHasher hasher, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _emailService = emailService;
+        _hasher = hasher;
         _unitOfWork = unitOfWork;
     }
 
@@ -28,7 +30,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Au
         if (await _userRepository.EmailExistsAsync(request.Email, cancellationToken))
             throw new DomainException("An account with this email already exists.");
 
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        var passwordHash = _hasher.Hash(request.Password);
         var user = User.Create(request.FirstName, request.LastName, request.Email, passwordHash, request.Currency);
 
         var refreshToken = _tokenService.GenerateRefreshToken();

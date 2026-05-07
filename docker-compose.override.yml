@@ -1,0 +1,50 @@
+version: "3.9"
+
+# =============================================================================
+# Development overrides — applied automatically by docker-compose when present.
+#
+# Key differences from production:
+#   • API uses SQLite instead of SQL Server (no db container needed locally).
+#   • ASPNETCORE_ENVIRONMENT=Development enables Swagger UI, detailed errors,
+#     and hot-reload-friendly settings.
+#   • Host ./logs directory is mounted so log files are visible from the host.
+#   • The db service is not started unless explicitly requested.
+#
+# Swagger UI: http://localhost:8080/swagger
+# =============================================================================
+
+services:
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+      # Use the lightweight SQLite database in development.
+      # The file will be created at /app/housebudget.db inside the container
+      # (or on the mounted volume if you add one).
+      ConnectionStrings__DefaultConnection: "DataSource=housebudget.db"
+
+      # Development-only JWT secret — replace with a strong value in .env.
+      JwtSettings__SecretKey: "dev-only-secret-change-in-production-min32chars!"
+
+      # Stripe test keys — set real test keys in .env or shell environment.
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+
+      # Verbose logging in development.
+      Serilog__MinimumLevel__Default: Debug
+
+    # Mount the host logs directory so Serilog file sinks are immediately
+    # accessible without docker exec.
+    volumes:
+      - ./logs:/app/logs
+
+    # In development the API no longer depends on the SQL Server container.
+    depends_on: {}
+
+  # The SQL Server container is kept in this file so developers can opt in
+  # with:  docker-compose up db
+  # but it is NOT started as part of the default `docker-compose up`.
+  db:
+    profiles:
+      - sqlserver

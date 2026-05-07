@@ -28,3 +28,31 @@ public record TransactionItem(Guid Id, string TypeName, decimal Amount, string C
 public record BudgetItem(Guid Id, string Name, decimal TotalAmount, decimal TotalSpent, decimal UsagePercentage, bool IsOverBudget, string Currency, bool IsActive);
 public record GoalItem(Guid Id, string Name, decimal TargetAmount, decimal CurrentAmount, decimal ProgressPercentage, string Currency, string StatusName, string Color, decimal? MonthlyRequired);
 public record BillItem(Guid Id, string Name, decimal Amount, string Currency, string RecurrenceName, DateOnly NextDueDate, bool IsDueSoon, bool IsOverdue, string Color, bool IsActive);
+
+public record CategoryModel(Guid Id, string Name, string TypeName, string Color, bool IsSystem);
+
+public record CategoryBreakdownItem(string CategoryName, string Color, decimal Amount, decimal Percentage);
+
+public record MonthlyTrendItem(string Month, decimal Income, decimal Expenses)
+{
+    public double IncomeBarWidth => (double)Math.Min(Income / 10m, 200m);
+    public double ExpensesBarWidth => (double)Math.Min(Expenses / 10m, 200m);
+}
+
+public record MonthlyReportData(
+    decimal TotalIncome,
+    decimal TotalExpenses,
+    decimal NetSavings,
+    decimal SavingsRate,
+    List<CategoryBreakdownItem> CategoryBreakdown,
+    List<MonthlyTrendItem> MonthlyTrend
+);
+
+public record AnnualReportData(
+    decimal TotalIncome,
+    decimal TotalExpenses,
+    decimal NetSavings,
+    decimal SavingsRate,
+    List<CategoryBreakdownItem> CategoryBreakdown,
+    List<MonthlyTrendItem> MonthlyTrend
+);

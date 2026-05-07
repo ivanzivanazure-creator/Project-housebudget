@@ -1,3 +1,5 @@
+using Hangfire;
+using HouseBudget.API.Jobs;
 using HouseBudget.API.Middleware;
 using HouseBudget.API.Services;
 using HouseBudget.Application;
@@ -5,14 +7,17 @@ using HouseBudget.Application.Interfaces;
 using HouseBudget.Infrastructure.DependencyInjection;
 using HouseBudget.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog
+// ── Serilog ────────────────────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -22,17 +27,17 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Application + Infrastructure
+// ── Application + Infrastructure ──────────────────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Current user
+// ── Current user ──────────────────────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// JWT Authentication
+// ── JWT Authentication ─────────────────────────────────────────────────────
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? "HouseBudgetSuperSecretKeyChangeInProduction2024!";
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -52,21 +57,82 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Controllers
+// ── Rate Limiting (ASP.NET Core built-in) ─────────────────────────────────
+var rlConfig = builder.Configuration.GetSection("RateLimiting");
+
+builder.Services.AddRateLimiter(options =>
+{
+    // Strict window for login/register
+    options.AddFixedWindowLimiter("auth", cfg =>
+    {
+        cfg.Window = TimeSpan.FromSeconds(rlConfig.GetValue("LoginWindowSeconds", 60));
+        cfg.PermitLimit = rlConfig.GetValue("LoginMaxAttempts", 10);
+        cfg.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        cfg.QueueLimit = 0;
+    });
+
+    // Sliding window for all other API traffic
+    options.AddSlidingWindowLimiter("global", cfg =>
+    {
+        cfg.Window = TimeSpan.FromSeconds(rlConfig.GetValue("GlobalWindowSeconds", 60));
+        cfg.PermitLimit = rlConfig.GetValue("GlobalMaxRequests", 300);
+        cfg.SegmentsPerWindow = 6;
+        cfg.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        cfg.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = 429;
+    options.OnRejected = async (ctx, token) =>
+    {
+        ctx.HttpContext.Response.Headers["Retry-After"] = "60";
+        await ctx.HttpContext.Response.WriteAsJsonAsync(
+            new { success = false, message = "Too many requests. Please slow down." }, token);
+    };
+});
+
+// ── CORS ───────────────────────────────────────────────────────────────────
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AppCors", policy =>
+    {
+        if (builder.Environment.IsDevelopment() || allowedOrigins.Length == 0)
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        else
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+    });
+});
+
+// ── Health Checks ──────────────────────────────────────────────────────────
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>("database");
+
+// ── Hangfire ───────────────────────────────────────────────────────────────
+builder.Services.AddHangfire(cfg => cfg
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseInMemoryStorage());
+
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = 2;
+    options.Queues = ["default", "critical"];
+});
+
+builder.Services.AddScoped<RecurringBillsJob>();
+
+// ── Controllers ───────────────────────────────────────────────────────────
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
     {
         opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
-
-// Swagger
+// ── Swagger ────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -96,18 +162,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ── Build ──────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// Migrate and seed database
+// ── Database: run migrations then seed ────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    await db.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(db);
 }
 
+// ── Middleware pipeline ────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseSerilogRequestLogging();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
@@ -117,12 +187,29 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "HouseBudget API v1");
         c.RoutePrefix = string.Empty;
     });
+
+    app.UseHangfireDashboard("/hangfire");
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("AppCors");
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+// ── Health check endpoints ─────────────────────────────────────────────────
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
+
+// ── Controllers with global rate limit ────────────────────────────────────
+app.MapControllers().RequireRateLimiting("global");
+
+// ── Recurring Hangfire jobs ───────────────────────────────────────────────
+RecurringJob.AddOrUpdate<RecurringBillsJob>(
+    "process-recurring-bills",
+    job => job.ExecuteAsync(CancellationToken.None),
+    Cron.Daily(6)); // daily at 06:00 UTC
 
 app.Run();
+
+// Expose Program class for WebApplicationFactory in integration tests
+public partial class Program { }

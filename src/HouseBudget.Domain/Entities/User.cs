@@ -21,8 +21,11 @@ public sealed class User : BaseEntity
     public string? RefreshToken { get; private set; }
     public DateTime? RefreshTokenExpiry { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
+    public int FailedLoginAttempts { get; private set; }
+    public DateTime? LockoutEnd { get; private set; }
 
     public string FullName => $"{FirstName} {LastName}";
+    public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd > DateTime.UtcNow;
 
     public IReadOnlyCollection<Account> Accounts => _accounts.AsReadOnly();
     public IReadOnlyCollection<Category> Categories => _categories.AsReadOnly();
@@ -74,7 +77,22 @@ public sealed class User : BaseEntity
         MarkUpdated();
     }
 
-    public void RecordLogin() { LastLoginAt = DateTime.UtcNow; MarkUpdated(); }
+    public void RecordLogin()
+    {
+        LastLoginAt = DateTime.UtcNow;
+        FailedLoginAttempts = 0;
+        LockoutEnd = null;
+        MarkUpdated();
+    }
+
+    public void RecordFailedLogin(int maxAttempts = 5, int lockoutMinutes = 15)
+    {
+        FailedLoginAttempts++;
+        if (FailedLoginAttempts >= maxAttempts)
+            LockoutEnd = DateTime.UtcNow.AddMinutes(lockoutMinutes);
+        MarkUpdated();
+    }
+
     public void VerifyEmail() { IsEmailVerified = true; MarkUpdated(); }
     public void Deactivate() { IsActive = false; MarkUpdated(); }
     public void SetDefaultCurrency(string currency) { DefaultCurrency = currency; MarkUpdated(); }

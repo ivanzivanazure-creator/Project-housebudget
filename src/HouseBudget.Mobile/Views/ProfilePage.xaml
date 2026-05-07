@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.ProfilePage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:ProfileViewModel"
+             Title="Profile"
+             BackgroundColor="#F5F7FA">
+
+    <RefreshView Command="{Binding LoadProfileCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Spacing="0">
+
+                <!-- Profile Header -->
+                <Frame BackgroundColor="#1A1A2E" CornerRadius="0" Padding="20,28" HasShadow="False">
+                    <VerticalStackLayout Spacing="12" HorizontalOptions="Center">
+
+                        <!-- Initials Avatar -->
+                        <Frame WidthRequest="72" HeightRequest="72" CornerRadius="36"
+                               BackgroundColor="#E94560" Padding="0" HasShadow="False"
+                               HorizontalOptions="Center">
+                            <Label Text="{Binding Initials}" FontSize="26" FontAttributes="Bold"
+                                   TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Frame>
+
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label FontSize="20" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding FirstName}" />
+                                        <Span Text=" " />
+                                        <Span Text="{Binding LastName}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding Email}" FontSize="13" TextColor="#90A4AE" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Edit Profile Section -->
+                <Frame BackgroundColor="White" CornerRadius="16" Margin="16,16,16,0" Padding="16" HasShadow="True">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Edit Profile" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="First Name" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding FirstName}" Placeholder="First name"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Last Name" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding LastName}" Placeholder="Last name"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Phone Number" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding PhoneNumber}" Placeholder="Phone number"
+                                   Keyboard="Telephone"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <Button Text="Save Changes" Command="{Binding UpdateProfileCommand}"
+                                BackgroundColor="#E94560" TextColor="White" CornerRadius="10"
+                                HeightRequest="46" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Change Password Section -->
+                <Frame BackgroundColor="White" CornerRadius="16" Margin="16,12,16,0" Padding="16" HasShadow="True">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Change Password" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Current Password" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding CurrentPassword}" Placeholder="Current password"
+                                   IsPassword="True"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="New Password" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding NewPassword}" Placeholder="New password"
+                                   IsPassword="True"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Confirm New Password" FontSize="12" TextColor="#607D8B" />
+                            <Entry Text="{Binding ConfirmPassword}" Placeholder="Confirm new password"
+                                   IsPassword="True"
+                                   BackgroundColor="#F5F7FA" TextColor="#1A1A2E" PlaceholderColor="#B0BEC5" />
+                        </VerticalStackLayout>
+
+                        <Button Text="Change Password" Command="{Binding ChangePasswordCommand}"
+                                BackgroundColor="#1A1A2E" TextColor="White" CornerRadius="10"
+                                HeightRequest="46" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Preferences Section -->
+                <Frame BackgroundColor="White" CornerRadius="16" Margin="16,12,16,0" Padding="16" HasShadow="True">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Preferences" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Default Currency" FontSize="12" TextColor="#607D8B" />
+                            <Picker ItemsSource="{Binding Currencies}"
+                                    SelectedItem="{Binding DefaultCurrency}"
+                                    TextColor="#1A1A2E" BackgroundColor="#F5F7FA" />
+                        </VerticalStackLayout>
+
+                        <HorizontalStackLayout>
+                            <VerticalStackLayout HorizontalOptions="StartAndExpand" Spacing="2">
+                                <Label Text="Email Notifications" FontSize="14" TextColor="#1A1A2E" />
+                                <Label Text="Receive alerts and reminders via email" FontSize="12" TextColor="#90A4AE" />
+                            </VerticalStackLayout>
+                            <Switch IsToggled="{Binding NotificationsEnabled}"
+                                    OnColor="#E94560" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Logout Button -->
+                <Button Text="Log Out" Command="{Binding LogoutCommand}"
+                        BackgroundColor="White" TextColor="#1A1A2E" CornerRadius="10"
+                        Margin="16,12,16,0" HeightRequest="48" FontAttributes="Bold"
+                        BorderColor="#E0E0E0" BorderWidth="1" />
+
+                <!-- Danger Zone -->
+                <Frame BackgroundColor="#FFEBEE" CornerRadius="16" Margin="16,12,16,32" Padding="16" HasShadow="False" BorderColor="#FFCDD2">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Danger Zone" FontSize="16" FontAttributes="Bold" TextColor="#C62828" />
+                        <Label Text="Permanently delete your account and all associated data. This action cannot be undone."
+                               FontSize="13" TextColor="#B71C1C" />
+                        <Button Text="Delete Account" Command="{Binding DeleteAccountCommand}"
+                                BackgroundColor="#F44336" TextColor="White" CornerRadius="10"
+                                HeightRequest="46" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

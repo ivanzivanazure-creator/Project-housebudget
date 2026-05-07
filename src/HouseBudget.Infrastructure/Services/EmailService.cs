@@ -29,6 +29,13 @@ public sealed class EmailService : IEmailService
     public async Task SendBudgetAlertEmailAsync(string toEmail, string budgetName, decimal spent, decimal budget, CancellationToken cancellationToken = default)
         => await SendEmailAsync(toEmail, $"Budget Alert: {budgetName}", $"You have spent {spent:C} out of your {budget:C} budget for '{budgetName}'.", cancellationToken);
 
+    public async Task SendBillReminderAsync(string toEmail, string userName, string billName, decimal amount, string currency, DateOnly dueDate, int daysUntilDue, CancellationToken cancellationToken = default)
+    {
+        var dueText = daysUntilDue == 0 ? "today" : daysUntilDue == 1 ? "tomorrow" : $"in {daysUntilDue} days";
+        var body = $"Hi {userName},\n\nThis is a reminder that your bill '{billName}' of {amount:N2} {currency} is due {dueText} ({dueDate:MMMM dd, yyyy}).\n\nLog in to HouseBudget to mark it as paid.\n\nHouseBudget Team";
+        await SendEmailAsync(toEmail, $"Reminder: {billName} due {dueText}", body, cancellationToken);
+    }
+
     private async Task SendEmailAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)
     {
         try
