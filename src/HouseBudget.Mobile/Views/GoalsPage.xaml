@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.GoalsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:GoalsViewModel"
+             Title="Savings Goals"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Goals Summary -->
+        <Frame Grid.Row="0" BackgroundColor="#1A1A2E" CornerRadius="0" Padding="16" HasShadow="False">
+            <Grid ColumnDefinitions="*,*">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                    <Label Text="Total Saved" FontSize="12" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalSaved, StringFormat='{0:N2}'}" FontSize="22" FontAttributes="Bold" TextColor="#4CAF50" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="Total Target" FontSize="12" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalTarget, StringFormat='{0:N2}'}" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- Create Goal Button -->
+        <Button Grid.Row="1" Text="+ New Goal" Command="{Binding CreateGoalCommand}"
+                BackgroundColor="#4CAF50" TextColor="White" CornerRadius="8" Margin="16,12"
+                FontAttributes="Bold" HeightRequest="44" />
+
+        <!-- Goals List -->
+        <RefreshView Grid.Row="2" Command="{Binding LoadGoalsCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Goals}" Margin="16,0">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Margin="0,40">
+                        <Label Text="🎯" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="No savings goals yet" FontSize="16" TextColor="#90A4AE" HorizontalOptions="Center" />
+                        <Label Text="Set a goal and start saving!" FontSize="13" TextColor="#B0BEC5" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="White" CornerRadius="16" Padding="16" Margin="0,0,0,12" HasShadow="True">
+                            <VerticalStackLayout Spacing="10">
+                                <HorizontalStackLayout>
+                                    <Frame WidthRequest="42" HeightRequest="42" CornerRadius="21" Padding="0"
+                                           BackgroundColor="{Binding Color}" HasShadow="False" HorizontalOptions="Start">
+                                        <Label Text="🎯" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Frame>
+                                    <VerticalStackLayout Margin="12,0,0,0" HorizontalOptions="StartAndExpand">
+                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                        <Label Text="{Binding StatusName}" FontSize="12" TextColor="#90A4AE" />
+                                    </VerticalStackLayout>
+                                    <Label Text="{Binding ProgressPercentage, StringFormat='{0:F1}%'}" FontSize="20" FontAttributes="Bold"
+                                           TextColor="{Binding Color}" VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+
+                                <ProgressBar Progress="{Binding ProgressPercentage, Converter={StaticResource PercentToProgressConverter}}"
+                                             ProgressColor="{Binding Color}" HeightRequest="10" />
+
+                                <HorizontalStackLayout>
+                                    <Label HorizontalOptions="StartAndExpand" FontSize="13" TextColor="#607D8B">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding CurrentAmount, StringFormat='{0:N2}'}" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                                <Span Text=" / " />
+                                                <Span Text="{Binding TargetAmount, StringFormat='{0:N2}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Button Text="+ Add" Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GoalsViewModel}}, Path=ContributeCommand}"
+                                            CommandParameter="{Binding .}" BackgroundColor="#E8F5E9" TextColor="#2E7D32"
+                                            FontSize="13" Padding="12,6" CornerRadius="8" HeightRequest="32" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

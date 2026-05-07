@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.BudgetsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:BudgetsViewModel"
+             Title="Budgets"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Budget Summary -->
+        <Frame Grid.Row="0" BackgroundColor="#1A1A2E" CornerRadius="0" Padding="16" HasShadow="False">
+            <Grid ColumnDefinitions="*,*,*">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                    <Label Text="Budgeted" FontSize="11" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalBudgeted, StringFormat='{0:N0}'}" FontSize="18" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                    <Label Text="Spent" FontSize="11" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalSpent, StringFormat='{0:N0}'}" FontSize="18" FontAttributes="Bold" TextColor="#F44336" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                    <Label Text="Remaining" FontSize="11" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    <Label Text="{Binding TotalRemaining, StringFormat='{0:N0}'}" FontSize="18" FontAttributes="Bold" TextColor="#4CAF50" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- Create Budget Button -->
+        <Button Grid.Row="1" Text="+ Create Budget" Command="{Binding CreateBudgetCommand}"
+                BackgroundColor="#E94560" TextColor="White" CornerRadius="8" Margin="16,12"
+                FontAttributes="Bold" HeightRequest="44" />
+
+        <!-- Budgets List -->
+        <RefreshView Grid.Row="2" Command="{Binding LoadBudgetsCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Budgets}" Margin="16,0">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Margin="0,40">
+                        <Label Text="📊" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="No budgets created yet" FontSize="16" TextColor="#90A4AE" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="White" CornerRadius="16" Padding="16" Margin="0,0,0,12" HasShadow="True">
+                            <VerticalStackLayout Spacing="10">
+                                <HorizontalStackLayout>
+                                    <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" HorizontalOptions="StartAndExpand" />
+                                    <Frame BackgroundColor="{Binding IsOverBudget, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#FFEBEE|#E8F5E9'}"
+                                           Padding="6,2" CornerRadius="6" HasShadow="False">
+                                        <Label Text="{Binding UsagePercentage, StringFormat='{0:F1}%'}" FontSize="12" FontAttributes="Bold"
+                                               TextColor="{Binding IsOverBudget, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#C62828|#2E7D32'}" />
+                                    </Frame>
+                                </HorizontalStackLayout>
+
+                                <ProgressBar Progress="{Binding UsagePercentage, Converter={StaticResource PercentToProgressConverter}}"
+                                             ProgressColor="{Binding IsOverBudget, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#F44336|#4CAF50'}"
+                                             HeightRequest="8" />
+
+                                <HorizontalStackLayout>
+                                    <Label HorizontalOptions="StartAndExpand" FontSize="13" TextColor="#607D8B">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="Spent: " />
+                                                <Span Text="{Binding TotalSpent, StringFormat='{0:N2}'}" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label FontSize="13" TextColor="#607D8B">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="Budget: " />
+                                                <Span Text="{Binding TotalAmount, StringFormat='{0:N2}'}" FontAttributes="Bold" TextColor="#1A1A2E" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

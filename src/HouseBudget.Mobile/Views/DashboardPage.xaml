@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.DashboardPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:DashboardViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="#F5F7FA">
+
+    <RefreshView Command="{Binding LoadDashboardCommand}" IsRefreshing="{Binding IsBusy}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+                <!-- Greeting -->
+                <HorizontalStackLayout Spacing="8">
+                    <Label FontSize="22" FontAttributes="Bold" TextColor="#1A1A2E">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Hi, " />
+                                <Span Text="{Binding UserName}" FontAttributes="Bold" TextColor="#E94560" />
+                                <Span Text=" 👋" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </HorizontalStackLayout>
+
+                <!-- Net Worth Card -->
+                <Frame BackgroundColor="#1A1A2E" CornerRadius="16" Padding="20" HasShadow="True">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Net Worth" FontSize="13" TextColor="#90A4AE" />
+                        <Label FontSize="32" FontAttributes="Bold" TextColor="White">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding Currency}" />
+                                    <Span Text=" " />
+                                    <Span Text="{Binding TotalNetWorth, StringFormat='{0:N2}'}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+
+                        <BoxView HeightRequest="1" BackgroundColor="#2A2A4E" Margin="0,4" />
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                            <Label Grid.Column="0" Grid.Row="0" Text="Monthly Income" FontSize="12" TextColor="#90A4AE" />
+                            <Label Grid.Column="1" Grid.Row="0" Text="Monthly Expenses" FontSize="12" TextColor="#90A4AE" />
+                            <Label Grid.Column="0" Grid.Row="1" Text="{Binding MonthlyIncome, StringFormat='+{0:N2}'}" FontSize="16" TextColor="#4CAF50" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Grid.Row="1" Text="{Binding MonthlyExpenses, StringFormat='-{0:N2}'}" FontSize="16" TextColor="#F44336" FontAttributes="Bold" />
+                        </Grid>
+
+                        <HorizontalStackLayout Spacing="4">
+                            <Label Text="{Binding SavingsRate, StringFormat='Savings Rate: {0:F1}%'}" FontSize="13" TextColor="#B0BEC5" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Quick Actions -->
+                <Label Text="Quick Actions" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" />
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                    <Frame Grid.Column="0" BackgroundColor="White" CornerRadius="12" Padding="8" HasShadow="True">
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="➕" FontSize="24" HorizontalOptions="Center" />
+                            <Label Text="Income" FontSize="11" TextColor="#607D8B" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="addIncome" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                    <Frame Grid.Column="1" BackgroundColor="White" CornerRadius="12" Padding="8" HasShadow="True">
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="➖" FontSize="24" HorizontalOptions="Center" />
+                            <Label Text="Expense" FontSize="11" TextColor="#607D8B" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="addExpense" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                    <Frame Grid.Column="2" BackgroundColor="White" CornerRadius="12" Padding="8" HasShadow="True">
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="🔄" FontSize="24" HorizontalOptions="Center" />
+                            <Label Text="Transfer" FontSize="11" TextColor="#607D8B" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="transfer" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                    <Frame Grid.Column="3" BackgroundColor="White" CornerRadius="12" Padding="8" HasShadow="True">
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="📊" FontSize="24" HorizontalOptions="Center" />
+                            <Label Text="Reports" FontSize="11" TextColor="#607D8B" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="reports" />
+                        </Frame.GestureRecognizers>
+                    </Frame>
+                </Grid>
+
+                <!-- Upcoming Bills Warning -->
+                <Frame BackgroundColor="#FFF3E0" CornerRadius="12" Padding="12" HasShadow="False" IsVisible="{Binding UpcomingBills.Count, Converter={StaticResource IntToBoolConverter}}">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="⚠️" FontSize="20" VerticalOptions="Center" />
+                        <VerticalStackLayout>
+                            <Label Text="{Binding UpcomingBills.Count, StringFormat='{0} bill(s) due soon'}" FontSize="14" FontAttributes="Bold" TextColor="#E65100" />
+                            <Label Text="Tap to view bills" FontSize="12" TextColor="#BF360C" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="bills" />
+                    </Frame.GestureRecognizers>
+                </Frame>
+
+                <!-- Active Budgets -->
+                <HorizontalStackLayout>
+                    <Label Text="Active Budgets" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" HorizontalOptions="StartAndExpand" />
+                    <Label Text="See All" FontSize="13" TextColor="#E94560" VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="budgets" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+                <CollectionView ItemsSource="{Binding ActiveBudgets}" HeightRequest="120" ItemsLayout="HorizontalList">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="White" CornerRadius="12" Padding="12" Margin="0,0,8,4" WidthRequest="180" HasShadow="True">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Name}" FontSize="13" FontAttributes="Bold" TextColor="#1A1A2E" LineBreakMode="TailTruncation" />
+                                    <ProgressBar Progress="{Binding UsagePercentage, Converter={StaticResource PercentToProgressConverter}}"
+                                                 ProgressColor="{Binding IsOverBudget, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#F44336|#4CAF50'}" />
+                                    <Label FontSize="12" TextColor="#607D8B">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding SpentAmount, StringFormat='{0:N2}'}" FontAttributes="Bold" />
+                                                <Span Text=" / " />
+                                                <Span Text="{Binding TotalAmount, StringFormat='{0:N2}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Recent Transactions -->
+                <HorizontalStackLayout>
+                    <Label Text="Recent Transactions" FontSize="16" FontAttributes="Bold" TextColor="#1A1A2E" HorizontalOptions="StartAndExpand" />
+                    <Label Text="See All" FontSize="13" TextColor="#E94560" VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToCommand}" CommandParameter="transactions" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+                <CollectionView ItemsSource="{Binding RecentTransactions}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="White" CornerRadius="12" Padding="12" Margin="0,0,0,8" HasShadow="True">
+                                <Grid ColumnDefinitions="40,*,Auto">
+                                    <Frame Grid.Column="0" WidthRequest="36" HeightRequest="36" CornerRadius="18" Padding="0"
+                                           BackgroundColor="{Binding CategoryColor}" HasShadow="False">
+                                        <Label Text="{Binding Category, Converter={StaticResource CategoryToEmojiConverter}}"
+                                               FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Frame>
+                                    <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                        <Label Text="{Binding Description}" FontSize="14" FontAttributes="Bold" TextColor="#1A1A2E" LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding Category}" FontSize="12" TextColor="#90A4AE" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" FontSize="15" FontAttributes="Bold" VerticalOptions="Center"
+                                           TextColor="{Binding Type, Converter={StaticResource TypeToColorConverter}}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding Type, Converter={StaticResource TypeToSignConverter}}" />
+                                                <Span Text="{Binding Amount, StringFormat='{0:N2}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

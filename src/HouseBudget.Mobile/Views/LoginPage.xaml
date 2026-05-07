@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.LoginPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:LoginViewModel"
+             BackgroundColor="#1A1A2E"
+             Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="32,60,32,32" Spacing="24">
+
+            <!-- Logo + Title -->
+            <VerticalStackLayout HorizontalOptions="Center" Spacing="8">
+                <Label Text="💰" FontSize="64" HorizontalOptions="Center" />
+                <Label Text="HouseBudget" FontSize="32" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" />
+                <Label Text="Your personal finance companion" FontSize="14" TextColor="#B0BEC5" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Error Message -->
+            <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}"
+                   BackgroundColor="#F44336" CornerRadius="8" Padding="12" HasShadow="False">
+                <Label Text="{Binding ErrorMessage}" TextColor="White" FontSize="14" />
+            </Frame>
+
+            <!-- Register Fields -->
+            <VerticalStackLayout IsVisible="{Binding IsRegisterMode}" Spacing="12">
+                <Entry Placeholder="First Name" Text="{Binding FirstName}" PlaceholderColor="#90A4AE"
+                       BackgroundColor="#16213E" TextColor="White" />
+                <Entry Placeholder="Last Name" Text="{Binding LastName}" PlaceholderColor="#90A4AE"
+                       BackgroundColor="#16213E" TextColor="White" />
+            </VerticalStackLayout>
+
+            <!-- Email + Password -->
+            <VerticalStackLayout Spacing="12">
+                <Entry Placeholder="Email Address" Text="{Binding Email}" Keyboard="Email"
+                       PlaceholderColor="#90A4AE" BackgroundColor="#16213E" TextColor="White" />
+                <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True"
+                       PlaceholderColor="#90A4AE" BackgroundColor="#16213E" TextColor="White" />
+            </VerticalStackLayout>
+
+            <!-- Login Button -->
+            <Button Text="Sign In" Command="{Binding LoginCommand}" IsVisible="{Binding IsRegisterMode, Converter={StaticResource InvertedBoolConverter}}"
+                    BackgroundColor="#E94560" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <!-- Register Button -->
+            <Button Text="Create Account" Command="{Binding RegisterCommand}" IsVisible="{Binding IsRegisterMode}"
+                    BackgroundColor="#E94560" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#E94560" HorizontalOptions="Center" />
+
+            <!-- Toggle -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                <Label Text="{Binding IsRegisterMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Already have an account?|New to HouseBudget?'}"
+                       TextColor="#90A4AE" FontSize="14" VerticalOptions="Center" />
+                <Label Text="{Binding IsRegisterMode, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Sign in|Create account'}"
+                       TextColor="#E94560" FontSize="14" FontAttributes="Bold" VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleModeCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

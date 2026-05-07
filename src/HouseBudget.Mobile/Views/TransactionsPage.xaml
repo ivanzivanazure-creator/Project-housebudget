@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="HouseBudget.Mobile.Views.TransactionsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:HouseBudget.Mobile.ViewModels"
+             x:DataType="vm:TransactionsViewModel"
+             Title="Transactions"
+             BackgroundColor="#F5F7FA">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+
+        <!-- Summary -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="16,16,16,0" ColumnSpacing="12">
+            <Frame Grid.Column="0" BackgroundColor="#E8F5E9" CornerRadius="12" Padding="12" HasShadow="False">
+                <VerticalStackLayout>
+                    <Label Text="Income" FontSize="12" TextColor="#388E3C" />
+                    <Label Text="{Binding TotalIncome, StringFormat='+{0:N2}'}" FontSize="18" FontAttributes="Bold" TextColor="#2E7D32" />
+                </VerticalStackLayout>
+            </Frame>
+            <Frame Grid.Column="1" BackgroundColor="#FFEBEE" CornerRadius="12" Padding="12" HasShadow="False">
+                <VerticalStackLayout>
+                    <Label Text="Expenses" FontSize="12" TextColor="#C62828" />
+                    <Label Text="{Binding TotalExpenses, StringFormat='-{0:N2}'}" FontSize="18" FontAttributes="Bold" TextColor="#B71C1C" />
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
+
+        <!-- Filter Bar -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding FilterOptions}" SelectionMode="Single"
+                        SelectedItem="{Binding SelectedFilter}" Margin="16,12,16,0"
+                        ItemsLayout="HorizontalList" HeightRequest="36">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Frame Padding="12,6" Margin="0,0,8,0" CornerRadius="18" HasShadow="False"
+                           BackgroundColor="White">
+                        <Label Text="{Binding .}" FontSize="13" TextColor="#607D8B" />
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Add Transaction FAB -->
+        <Button Grid.Row="2" Text="+ Add Transaction" Command="{Binding AddTransactionCommand}"
+                BackgroundColor="#E94560" TextColor="White" CornerRadius="8" Margin="16,12"
+                FontAttributes="Bold" HeightRequest="44" />
+
+        <!-- Transaction List -->
+        <RefreshView Grid.Row="3" Command="{Binding LoadTransactionsCommand}" IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding Transactions}" Margin="16,0">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Margin="0,40">
+                        <Label Text="📭" FontSize="48" HorizontalOptions="Center" />
+                        <Label Text="No transactions yet" FontSize="16" TextColor="#90A4AE" HorizontalOptions="Center" />
+                        <Label Text="Tap '+ Add Transaction' to get started" FontSize="13" TextColor="#B0BEC5" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BackgroundColor="White" CornerRadius="12" Padding="12" Margin="0,0,0,8" HasShadow="True">
+                            <Grid ColumnDefinitions="40,*,Auto">
+                                <Frame Grid.Column="0" WidthRequest="36" HeightRequest="36" CornerRadius="18" Padding="0"
+                                       BackgroundColor="{Binding CategoryColor}" HasShadow="False">
+                                    <Label Text="💰" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Frame>
+                                <VerticalStackLayout Grid.Column="1" Margin="10,0,0,0" VerticalOptions="Center">
+                                    <Label Text="{Binding Description}" FontSize="14" FontAttributes="Bold" TextColor="#1A1A2E" LineBreakMode="TailTruncation" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="{Binding CategoryName}" FontSize="12" TextColor="#90A4AE" />
+                                        <Label Text="•" FontSize="12" TextColor="#B0BEC5" />
+                                        <Label Text="{Binding TransactionDate}" FontSize="12" TextColor="#90A4AE" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
+                                    <Label FontSize="15" FontAttributes="Bold" HorizontalOptions="End"
+                                           TextColor="{Binding TypeName, Converter={StaticResource TypeToColorConverter}}">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{Binding TypeName, Converter={StaticResource TypeToSignConverter}}" />
+                                                <Span Text="{Binding Amount, StringFormat='{0:N2}'}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Label Text="{Binding AccountName}" FontSize="11" TextColor="#B0BEC5" HorizontalOptions="End" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>
