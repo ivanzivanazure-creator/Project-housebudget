@@ -7,6 +7,8 @@ using HouseBudget.Domain.Interfaces;
 using Moq;
 using Xunit;
 
+#pragma warning disable CS8625
+
 namespace HouseBudget.Application.Tests;
 
 public sealed class RegisterCommandHandlerTests
@@ -14,10 +16,11 @@ public sealed class RegisterCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly Mock<IEmailService> _emailServiceMock = new();
+    private readonly Mock<IPasswordHasher> _hasherMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
     private RegisterCommandHandler CreateHandler() =>
-        new(_userRepoMock.Object, _tokenServiceMock.Object, _emailServiceMock.Object, _unitOfWorkMock.Object);
+        new(_userRepoMock.Object, _tokenServiceMock.Object, _emailServiceMock.Object, _hasherMock.Object, _unitOfWorkMock.Object);
 
     [Fact]
     public async Task Handle_NewUser_ReturnsAuthResponse()
@@ -26,6 +29,7 @@ public sealed class RegisterCommandHandlerTests
         _userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>(), default)).ReturnsAsync((User u, CancellationToken _) => u);
         _tokenServiceMock.Setup(t => t.GenerateAccessToken(It.IsAny<User>())).Returns("access_token");
         _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("refresh_token");
+        _hasherMock.Setup(h => h.Hash(It.IsAny<string>())).Returns("hashed_password");
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         var handler = CreateHandler();

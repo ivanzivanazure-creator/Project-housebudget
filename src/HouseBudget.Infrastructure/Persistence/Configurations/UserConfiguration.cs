@@ -17,6 +17,10 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PhoneNumber).HasMaxLength(20);
         builder.Property(u => u.AvatarUrl).HasMaxLength(500);
         builder.Property(u => u.RefreshToken).HasMaxLength(256);
+        builder.Property(u => u.FailedLoginAttempts).HasDefaultValue(0);
+        builder.Property(u => u.LockoutEnd);
+
+        builder.Ignore(u => u.IsLockedOut);
 
         builder.OwnsOne(u => u.Email, eb =>
         {
