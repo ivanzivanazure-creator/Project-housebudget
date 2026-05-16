@@ -31,11 +31,12 @@ on:
   # Manual trigger — useful for rollbacks or out-of-band deployments.
   workflow_dispatch:
 
-  # Automatic trigger on pushes to main, but only after CI has passed.
-  # The CI workflow must complete successfully before this workflow starts.
-  push:
-    branches:
-      - main
+  # Automatic: run only after the CI workflow completes successfully on main.
+  # This prevents deployment when tests are red.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
 
 # Only allow one deployment to run at a time; queue subsequent ones.
 concurrency:
@@ -54,13 +55,13 @@ jobs:
   deploy:
     name: Build, Push & Deploy
     runs-on: ubuntu-latest
-
-    # Gate: only run after CI passes on the same SHA.
-    # Remove this if you trigger the workflow manually after CI.
-    # (workflow_dispatch bypasses the needs check automatically via the
-    #  conditional below.)
-
     environment: production
+
+    # For workflow_run trigger: only deploy when CI actually passed.
+    # For workflow_dispatch: always allow manual deploy.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Checkout repository

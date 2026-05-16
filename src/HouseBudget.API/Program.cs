@@ -169,7 +169,13 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+
+    // InMemory provider (used in integration tests) doesn't support migrations.
+    if (db.Database.IsRelational())
+        await db.Database.MigrateAsync();
+    else
+        await db.Database.EnsureCreatedAsync();
+
     await DatabaseSeeder.SeedAsync(db);
 }
 
